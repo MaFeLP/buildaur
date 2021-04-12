@@ -180,7 +180,7 @@ def update(willinst=[]):
         install(willinst)
 
 
-class Package():
+class Package:
     pkg_obs = []
 
     def __init__(self, cutted, pkg, is_dep=False):
