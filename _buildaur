@@ -1,0 +1,21 @@
+#compdef buildaur bla buildaur.sh
+
+_buildaur_comp(){
+_arguments -C \
+	'(-h --help)'{-h,--help}\
+	'-S:pkg:( $(if [[ $words[3] != "" ]]; then buildaur -Qsqq $words[3]; fi) )'\
+	'-Q'{q,qq,''}':pkg:( $(if [[ $words[3] != "" ]]; then buildaur -Qsqq $words[3]; fi) )'\
+	'-Qs'{q,qq,''}\
+	'-Qi:pkg:( $(if [[ $words[3] != "" ]]; then buildaur -Qsqq $words[3]; fi) )'\
+	'-Syu'\
+	'-asp'\
+	'-aspyu'\
+	'--show:pkg:( $(if [[ $words[3] != "" ]]; then buildaur -Qsqq $words[3]; echo "--diff"; fi) )'\
+	'--clear'\
+	'(-v --version)'{-v,--version}\
+	'(-l --license)'{-l,--license}\
+	'--make-chroot'\
+	'--about'
+}
+
+_buildaur_comp
