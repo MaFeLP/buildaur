@@ -221,7 +221,7 @@ def install(pkgs):
 
     if len(pkgs) != len(start_pkgs):
         for pkg in start_pkgs:
-            if pkg not in [pkg.name for pkg in pkgs]:
+            if pkg not in [pkg_.name for pkg_ in pkgs]:
                 print(trans["error_not_found"]%(red, pkg))
                 exit(1)
 
