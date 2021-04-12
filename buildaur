@@ -2,13 +2,20 @@
 # maintainer lxgr <lxgr@protonmail.com>
 # this software is licensed under the GPL v3
 
-import os, urllib.request, time, sys, math, json, platform
+import json
+import math
+import os
+import platform
+import sys
+import urllib.request
+
 sys.path.append("/usr/share/buildaur/")
 import progressbar_buildaur as progressbar
 from buildaur_translations import *
 from pyalpm import Handle
 from pathlib import Path
 from datetime import datetime
+
 
 def branch(pkgs):
     alldeps=[]
@@ -17,6 +24,7 @@ def branch(pkgs):
     if len(alldeps) != 0:
         alldeps += branch(alldeps[0])
     return alldeps
+
 
 def tree(names):
     ret = [arr for arr in branch(names) if len(arr) != 0]
@@ -29,6 +37,7 @@ def tree(names):
                     del arr[namearr.index(pkg.name)]
     return ret
 
+
 def rem_double_pkgbases(pkgs):
     for arr in pkgs:
         for i in arr:
@@ -40,8 +49,10 @@ def rem_double_pkgbases(pkgs):
                 del arr[[pkg.pkgbase for pkg in arr].index(i.pkgbase)]
     return pkgs
 
+
 def get_local_pkgs():
     return [pkg.name for pkg in localdb.search(".*") if pkg.packager == "Unknown Packager"]
+
 
 def options(string, optlen):
     opts={'n' : 'global pcarg; options.confirm=False; pcarg+=" --noconfirm"', 'di' : 'options.install=False', 'co' : 'global yellow, red, thic, mkopts; mkopts+=" -m"; yellow=red=thic=""', 'spgp' : 'global mkopts; mkopts+=" --skippgpcheck"', 'ch' : 'options.chroot=True', 'dlf' : 'global deps_from_local_file; deps_from_local_file=True', 'git' : 'global rebuild_git; rebuild_git=True'}
@@ -52,6 +63,7 @@ def options(string, optlen):
     if optlen != len(string):
         print(trans["error_opts"]%(red, string))
         exit(1)
+
 
 def liner(length, names, sep=""):
     width, height = os.get_terminal_size()
@@ -64,6 +76,7 @@ def liner(length, names, sep=""):
             lens = len(name)+2
             print("\n"+(length-len(sep))*" "+sep+name+"  ", end="")
     print("")
+
 
 def sorter(ver1, ver2):
     arr1 = ver1.split("-")[0].split(".")
@@ -82,6 +95,7 @@ def sorter(ver1, ver2):
         return ver1
     elif ver2.split("-")[1] > ver1.split("-")[1]:
         return ver2
+
 
 def resolve(pkgs, type="multiinfo", quiet=False, searchby="name"):
     res = []
@@ -106,6 +120,7 @@ def resolve(pkgs, type="multiinfo", quiet=False, searchby="name"):
             exit(1)
     return res
 
+
 def info(ress, quiet=False):
     rescount = 0
     cutted = []
@@ -115,6 +130,7 @@ def info(ress, quiet=False):
         rescount += int(jsons["resultcount"])
         cutted += jsons["results"]
     return rescount, cutted
+
 
 def aspinfo(pkgs, quiet=False):
     rescount = 0
@@ -131,6 +147,7 @@ def aspinfo(pkgs, quiet=False):
         if not quiet:
             progressbar.progress(i+1, int(len(pkgs)), "Collecting "+pkg+"...")
     return rescount, cutted
+
 
 def update(willinst=[]):
     msg = []
@@ -162,8 +179,10 @@ def update(willinst=[]):
     else:
         install(willinst)
 
+
 class Package():
     pkg_obs = []
+
     def __init__(self, cutted, pkg, is_dep=False):
         splitted = cutted[pkg]
         self.is_dep = is_dep
@@ -183,7 +202,7 @@ class Package():
         Package.pkg_obs.append(self)
 
 
-class LocalInfo():
+class LocalInfo:
     def __init__(self, asp=False, pkg=""):
         path = "/usr/share/buildaur/outputter.sh"
         self.pkgdata = eval(os.popen(path+" asp "+pkg if asp else path).read().split("\n")[0])
@@ -201,6 +220,7 @@ def infoout(res, quiet=False, veryquiet=False):
             print(" "+pkg.name+"-"+pkg.ver+" (local: "+pkg.localver+")")
             print("    "+str(pkg.desc))
 
+
 def detailinfo(res):
     rescount, cutted=info(res, True)
     for i in range(int(rescount)):
@@ -211,6 +231,7 @@ def detailinfo(res):
             print(trans["info_arrays"][name]+(trans["max_name_len"]-len(trans["info_arrays"][name]))*" "+": ", end='')
             liner(trans["max_name_len"]+2, value)
         print("")
+
 
 def install(pkgs):
     start_pkgs = pkgs.copy()
@@ -349,6 +370,7 @@ def install(pkgs):
     else:
         exit()
 
+
 def deps(pkgs, do_install=True, quiet=False):
     global replace_deps, deps_from_local_file
     if mode == "asp":
@@ -378,6 +400,7 @@ def deps(pkgs, do_install=True, quiet=False):
                 return deps
     return []
 
+
 def list_hooks():
     hooktypes = ["prehooks", "posthooks", "prerunhooks", "postrunhooks", "hooks"]
     for hookdir in hooktypes:
@@ -385,6 +408,7 @@ def list_hooks():
         for hook in sorted(os.listdir("/etc/buildaur/"+hookdir)):
             print(" "+hook)
             print(os.popen('. /etc/buildaur/'+hookdir+'/'+hook+'; echo "  $desc"').read().split("\n")[0])
+
 
 def hook_activate(hooks):
     for hook in hooks:
@@ -394,6 +418,7 @@ def hook_activate(hooks):
             print(trans["hooks_on"]%hook)
         else:
             print(trans["error_not_found"]%(red, hook))
+
 
 def hook_deactivate(hooks):
     hooktypes=["prehooks", "posthooks", "prerunhooks", "postrunhooks"]
@@ -407,12 +432,14 @@ def hook_deactivate(hooks):
         if a != 1:
             print(trans["error_hook_not_found"]%(red, hook))
 
+
 def help():
     print(trans["help_start"]%(args[0]), end="")
     for type in trans["help"]:
         print("\n   "+trans["help"][type]["desc"])
         for arg in trans["help"][type]["content"]:
             print("      "+arg+(18-len(arg))*" "+": "+trans["help"][type]["content"][arg])
+
 
 def hooks(type):
     hooks = os.popen("ls /etc/buildaur/"+type).read().split('\n')[:-1]
@@ -421,6 +448,7 @@ def hooks(type):
         for hook in hooks:
             print(" "+hook+"...")
             os.system("/etc/buildaur/"+type+"/"+hook+" -u")
+
 
 def main():
     global mode
@@ -542,6 +570,7 @@ def main():
                 print(open("PKGBUILD", "rt").read())
     else:
         print(trans["error_opts"]%(red, args[1]))
+
 
 # global home and pathchecking
 home = str(Path.home())
