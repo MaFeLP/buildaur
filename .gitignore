@@ -1,2 +1,6 @@
-*.out
 __pycache__/*
+
+# PyCharm workspace related files
+.idea/
+*.iml
+*.out
